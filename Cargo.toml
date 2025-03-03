@@ -14,16 +14,16 @@ path = "uniffi-bindgen.rs"
 
 [dependencies]
 borsh = {version = "1.2.0", features = ["unstable__schema", "derive"]}
-tendermint-rpc = {version = "0.38.0", features = ["http-client"]}
-namada_sdk = { git = "https://github.com/anoma/namada", tag = "v1.0.0", default-features = false, features = ["std", "async-send", "download-params"] }
+tendermint-rpc = {version = "0.40.1", features = ["http-client"]}
+namada_sdk = { git = "https://github.com/anoma/namada", tag = "v1.1.1", default-features = false, features = ["std", "async-send", "download-params"] }
 tokio = {version = "1.8.2", features = ["rt"]}
 futures = "0.3.31"
 uniffi = { version = "0.28.3", features = [ "build", "cli" ] }
 uniffi_macros = "0.28.3"
 uniffi_bindgen = "0.28.3"
 uniffi_build = "0.28.3"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { version = "1.0.125", features = ["derive"] }
+serde_json = "1.0.133"
 once_cell = "1.17"
 reqwest = "0.11.4"
 tempfile = {version = "3.2.0"}

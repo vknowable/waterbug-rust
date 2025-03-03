@@ -715,6 +715,8 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -731,9 +733,11 @@ internal interface UniffiLib : Library {
     }
 
     fun uniffi_waterbugrs_fn_func_init_sdk(`rpcUrl`: RustBuffer.ByValue,`baseDir`: RustBuffer.ByValue,`cacheDir`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
+    ): RustBuffer.ByValue
     fun uniffi_waterbugrs_fn_func_query_epoch(uniffi_out_err: UniffiRustCallStatus, 
     ): Long
+    fun uniffi_waterbugrs_fn_func_query_epoch_secs_remaining(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun ffi_waterbugrs_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_waterbugrs_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -850,6 +854,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_waterbugrs_checksum_func_query_epoch(
     ): Short
+    fun uniffi_waterbugrs_checksum_func_query_epoch_secs_remaining(
+    ): Short
     fun ffi_waterbugrs_uniffi_contract_version(
     ): Int
     
@@ -867,10 +873,13 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: UniffiLib) {
-    if (lib.uniffi_waterbugrs_checksum_func_init_sdk() != 36357.toShort()) {
+    if (lib.uniffi_waterbugrs_checksum_func_init_sdk() != 24384.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_waterbugrs_checksum_func_query_epoch() != 22613.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_waterbugrs_checksum_func_query_epoch_secs_remaining() != 57959.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1002,6 +1011,38 @@ public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
 
 
 
+data class EpochTimeInfo (
+    var `secondsLeft`: kotlin.ULong, 
+    var `epochDuration`: kotlin.ULong
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeEpochTimeInfo: FfiConverterRustBuffer<EpochTimeInfo> {
+    override fun read(buf: ByteBuffer): EpochTimeInfo {
+        return EpochTimeInfo(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: EpochTimeInfo) = (
+            FfiConverterULong.allocationSize(value.`secondsLeft`) +
+            FfiConverterULong.allocationSize(value.`epochDuration`)
+    )
+
+    override fun write(value: EpochTimeInfo, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`secondsLeft`, buf)
+            FfiConverterULong.write(value.`epochDuration`, buf)
+    }
+}
+
+
+
 
 
 sealed class WaterbugException: kotlin.Exception() {
@@ -1121,13 +1162,14 @@ public object FfiConverterTypeWaterbugError : FfiConverterRustBuffer<WaterbugExc
          * base_dir: Android app data directory
          * cache_dir: Android app cache directory (for caching shielded sync data)
          */
-    @Throws(WaterbugException::class) fun `initSdk`(`rpcUrl`: kotlin.String, `baseDir`: kotlin.String, `cacheDir`: kotlin.String)
-        = 
+    @Throws(WaterbugException::class) fun `initSdk`(`rpcUrl`: kotlin.String, `baseDir`: kotlin.String, `cacheDir`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
     uniffiRustCallWithError(WaterbugException) { _status ->
     UniffiLib.INSTANCE.uniffi_waterbugrs_fn_func_init_sdk(
         FfiConverterString.lower(`rpcUrl`),FfiConverterString.lower(`baseDir`),FfiConverterString.lower(`cacheDir`),_status)
 }
-    
+    )
+    }
     
 
         /**
@@ -1137,6 +1179,19 @@ public object FfiConverterTypeWaterbugError : FfiConverterRustBuffer<WaterbugExc
             return FfiConverterULong.lift(
     uniffiRustCallWithError(WaterbugException) { _status ->
     UniffiLib.INSTANCE.uniffi_waterbugrs_fn_func_query_epoch(
+        _status)
+}
+    )
+    }
+    
+
+        /**
+         * Query the seconds remaining until the next epoch. Returns a tuple of seconds remaining and the epoch duration
+         */
+    @Throws(WaterbugException::class) fun `queryEpochSecsRemaining`(): EpochTimeInfo {
+            return FfiConverterTypeEpochTimeInfo.lift(
+    uniffiRustCallWithError(WaterbugException) { _status ->
+    UniffiLib.INSTANCE.uniffi_waterbugrs_fn_func_query_epoch_secs_remaining(
         _status)
 }
     )
